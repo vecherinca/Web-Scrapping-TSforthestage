@@ -103,8 +103,9 @@ def get_the_roomcount(area):
    """
    This function is takes the area of a room. 
    If there is a Studio, the 1 set as room count. 
-   Else we scrap the number using regex. 
-  
+   Else we scrap the number using regex.
+   Note: sometimes the room_count is not defined.
+   I put Nan instead.
    """
    
    studiostr = "Studio"
@@ -135,7 +136,7 @@ def get_the_data(parsed_data):
 
         for list in parsed_data:
             try:
-                price = list.find('div', class_ = "listing-price margin-bottom").text.replace(u' ', u'').replace(u'\n', u'').replace(u'\u202f', u' ').replace(u'\xa0', u' ')
+                price = list.find('div', class_ = "listing-price margin-bottom").text.replace(u' ', u'').replace(u'\n', u'').replace(u'\u202f', u' ').replace(u'\xa0', u' ').replace(u' €', u'')
             except Exception as e:
                 price = 'Not Available'
             listing_id = list.find('button', attrs = {'class': "btn-reset listing-actions__item"})['data-listing-id']
@@ -162,4 +163,3 @@ for i in range(32682,32702):#here we go through arr
 
 #print(lists)
 get_the_data(lists)
-
