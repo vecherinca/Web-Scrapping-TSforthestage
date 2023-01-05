@@ -1,4 +1,4 @@
-import requests 
+import requests
 import time
 from bs4 import BeautifulSoup
 import re
@@ -11,6 +11,7 @@ from csv import writer
 #4)When the price in not defined, it's a zero or NaN? 
 #5)rename the area
 #6)check if the data is ints where it supposed to be(if it's nedeed)
+#7) I think we need to scrap more the data
 
 def get_the_number_of_page(URL):
     """
@@ -96,7 +97,9 @@ def get_the_area(area):
     try:
         area_room = re.search(area_pattern, str(area)).group(1)
     except Exception as e:
-        area_room = 'Nan'
+        area_room = 'NaN'
+    if area_room == 'NaN':
+        area_room = 1
     return(area_room)
 
 def get_the_roomcount(area):
@@ -107,7 +110,7 @@ def get_the_roomcount(area):
    Note: sometimes the room_count is not defined.
    I put Nan instead.
    """
-   
+
    studiostr = "Studio"
    if studiostr in area:
        room_count = 1
@@ -117,10 +120,36 @@ def get_the_roomcount(area):
            room_count_pattern = r'(\d+) pièce'
            room_count = re.search(room_count_pattern, str(area)).group(1)
        except Exception as e:
-           room_count = 'Nan'
+           room_count = 'NaN'
+       if room_count == 'NaN':
+           room_count = 1
        return(room_count)
 
-        
+
+def get_the_roomcount(area):
+   """
+   This function is takes the area of a room. 
+   If there is a Studio, the 1 set as room count. 
+   Else we scrap the number using regex.
+   Note: sometimes the room_count is not defined.
+   I put Nan instead.
+   """
+
+   studiostr = "Studio"
+   if studiostr in area:
+       room_count = 1
+       return(room_count)
+   else:
+       try:
+           room_count_pattern = r'(\d+) pièce'
+           room_count = re.search(room_count_pattern, str(area)).group(1)
+       except Exception as e:
+           room_count = 'NaN'
+       if room_count == 'NaN':
+           room_count = 1
+       return(room_count)
+
+
 def get_the_data(parsed_data):
     """
     The get_the_data() function operates with the arguments that
@@ -129,25 +158,30 @@ def get_the_data(parsed_data):
     to use the the exception handling.
     Also, this nice function is also transforms our data to csv format. 
     """
-    with open('data.csv', "w", encoding = 'utf8', newline = '') as f:
+    with open('data_right_one.csv', "w", encoding = 'utf8', newline = '') as f:
         thewriter = writer(f)
-        header = ['listing_id', 'place_id', 'price','area_room', 'room_count']
+        header = ['listing_id', 'place_id', 'price','area', 'room_count']
         thewriter.writerow(header)
 
         for list in parsed_data:
             try:
                 price = list.find('div', class_ = "listing-price margin-bottom").text.replace(u' ', u'').replace(u'\n', u'').replace(u'\u202f', u' ').replace(u'\xa0', u' ').replace(u' €', u'')
             except Exception as e:
-                price = 'Not Available'
+                price = 'NaN'
+            if price!='NaN':
+                price = price.replace(' ', '')
+            else:
+                price = 1
+            price = int(price)
             listing_id = list.find('button', attrs = {'class': "btn-reset listing-actions__item"})['data-listing-id']
-            area = list.find('div', class_ = "listing-characteristic margin-bottom").text.replace(u'\xa0', u' ').replace(u'\n', u'')
+            area_ = list.find('div', class_ = "listing-characteristic margin-bottom").text.replace(u'\xa0', u' ').replace(u'\n', u'')
             arr = list.find('div', class_ = "text--muted text--small").text.replace(u'\xa0', u' ').replace(u'\n', u'')
             arr = get_the_index(arr)
-            area_room = get_the_area(area)
-            room_count = get_the_roomcount(area)
-            table = [listing_id, arr, price, area_room, room_count]
+            area = get_the_area(area_)
+            room_count = get_the_roomcount(area_)
+            table = [listing_id, arr, price, area, room_count]
             thewriter.writerow(table)
-        
+
 
 lists = []
 for i in range(32682,32702):#here we go through arr
