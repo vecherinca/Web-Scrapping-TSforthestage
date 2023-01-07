@@ -1,17 +1,7 @@
-import requests
-import time
+import requests 
 from bs4 import BeautifulSoup
 import re
 from csv import writer
-
-#The code is working, what to fix:
-#1)do I need to delete euro sign from a price tag?
-#2)In area and room_count - do I have only numbers???
-#3)The function for the main processing - PUT IT IN A FUNCTION, it looks ugly
-#4)When the price in not defined, it's a zero or NaN? 
-#5)rename the area
-#6)check if the data is ints where it supposed to be(if it's nedeed)
-#7) I think we need to scrap more the data
 
 def get_the_number_of_page(URL):
     """
@@ -91,7 +81,7 @@ def get_the_index(arr):
 def get_the_area(area):
     """
     This function is extracting an area of apartament size using the regex.
-    Note:sometimes there is no area
+    Note:sometimes there is no area. That is why it was decided to put 1. 
     """
     area_pattern = r'(\d+) m²'
     try:
@@ -108,9 +98,8 @@ def get_the_roomcount(area):
    If there is a Studio, the 1 set as room count. 
    Else we scrap the number using regex.
    Note: sometimes the room_count is not defined.
-   I put Nan instead.
    """
-
+   
    studiostr = "Studio"
    if studiostr in area:
        room_count = 1
@@ -125,40 +114,20 @@ def get_the_roomcount(area):
            room_count = 1
        return(room_count)
 
-
-def get_the_roomcount(area):
-   """
-   This function is takes the area of a room. 
-   If there is a Studio, the 1 set as room count. 
-   Else we scrap the number using regex.
-   Note: sometimes the room_count is not defined.
-   I put Nan instead.
-   """
-
-   studiostr = "Studio"
-   if studiostr in area:
-       room_count = 1
-       return(room_count)
-   else:
-       try:
-           room_count_pattern = r'(\d+) pièce'
-           room_count = re.search(room_count_pattern, str(area)).group(1)
-       except Exception as e:
-           room_count = 'NaN'
-       if room_count == 'NaN':
-           room_count = 1
-       return(room_count)
-
-
+        
 def get_the_data(parsed_data):
     """
     The get_the_data() function operates with the arguments that
-    is gonna be in a dataset. 
-    As in some cases the price is not defined, it was decided 
+    is gonna be in a dataset.
+    As in some cases the price is not defined, it was decided
     to use the the exception handling.
-    Also, this nice function is also transforms our data to csv format. 
+    Also, this nice function transforms the data to csv table.
+    It was also decided to put price at 1 and then drop the columns with the
+    price 1 from the db. However another aproach could be done: it is
+    possible to calculate mean by every arrondissment and put it instead of
+    the of the 1.
     """
-    with open('data_right_one.csv', "w", encoding = 'utf8', newline = '') as f:
+    with open('data_Jan6.csv', "w", encoding = 'utf8', newline = '') as f:
         thewriter = writer(f)
         header = ['listing_id', 'place_id', 'price','area', 'room_count']
         thewriter.writerow(header)
@@ -181,13 +150,13 @@ def get_the_data(parsed_data):
             room_count = get_the_roomcount(area_)
             table = [listing_id, arr, price, area, room_count]
             thewriter.writerow(table)
-
+        
 
 lists = []
-for i in range(32682,32702):#here we go through arr
+for i in range(32682,32702):#iteration by arrondissment 
     URL = f"https://www.meilleursagents.com/annonces/achat/search/?item_types=ITEM_TYPE.APARTMENT&place_ids={i}&page={1}"
     num_page = get_the_number_of_page(URL)
-    for j in range(1, num_page+1): #here we go through the page but for every arr it's different
+    for j in range(1, num_page+1): #iteration by page
         URL = f"https://www.meilleursagents.com/annonces/achat/search/?item_types=ITEM_TYPE.APARTMENT&place_ids={i}&page={j}"
         page = requests.get(URL)
         html = page.content
@@ -195,5 +164,3 @@ for i in range(32682,32702):#here we go through arr
         for div in soup.find_all('div', class_ = 'listing-item__content'):
             lists.append(div)
 
-#print(lists)
-get_the_data(lists)
