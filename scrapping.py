@@ -152,6 +152,11 @@ def get_the_data(parsed_data):
             thewriter.writerow(table)
         
 
+"""
+what did I do first is I created a list
+where I will collect all the data
+from the first 'listing-item__content' section 
+"""
 lists = []
 for i in range(32682,32702):#iteration by arrondissment 
     URL = f"https://www.meilleursagents.com/annonces/achat/search/?item_types=ITEM_TYPE.APARTMENT&place_ids={i}&page={1}"
@@ -164,3 +169,4 @@ for i in range(32682,32702):#iteration by arrondissment
         for div in soup.find_all('div', class_ = 'listing-item__content'):
             lists.append(div)
 
+get_the_data(lists)
